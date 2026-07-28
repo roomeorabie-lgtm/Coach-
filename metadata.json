@@ -1,0 +1,6 @@
+{
+  "name": "COACH BODA",
+  "description": "Premium Fitness Coaching & Workout Platform by Coach Boda",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
