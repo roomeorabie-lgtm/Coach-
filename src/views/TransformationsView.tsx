@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { BeforeAfterCard } from '../components/BeforeAfterCard';
+import { HorizontalCarousel } from '../components/HorizontalCarousel';
 import { Trophy, Flame } from 'lucide-react';
 
 export const TransformationsView: React.FC = () => {
@@ -23,7 +24,7 @@ export const TransformationsView: React.FC = () => {
         </p>
       </div>
 
-      {/* Transformations Grid */}
+      {/* Transformations Carousel */}
       {db.transformations.length === 0 ? (
         <div className="glass-panel p-12 rounded-3xl text-center space-y-3">
           <Flame className="w-12 h-12 text-gray-500 mx-auto stroke-1" />
@@ -33,11 +34,13 @@ export const TransformationsView: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <HorizontalCarousel itemGap="gap-8">
           {db.transformations.map((tf) => (
-            <BeforeAfterCard key={tf.id} transformation={tf} />
+            <div key={tf.id} className="w-[88vw] sm:w-[500px] shrink-0 snap-center">
+              <BeforeAfterCard transformation={tf} />
+            </div>
           ))}
-        </div>
+        </HorizontalCarousel>
       )}
 
     </div>

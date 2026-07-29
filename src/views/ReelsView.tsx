@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Reel } from '../types';
 import { parseVideoUrl } from '../utils/videoUtils';
+import { HorizontalCarousel } from '../components/HorizontalCarousel';
 import { Film, Play, Heart, Share2, X, Sparkles } from 'lucide-react';
 
 export const ReelsView: React.FC = () => {
@@ -25,7 +26,7 @@ export const ReelsView: React.FC = () => {
         </p>
       </div>
 
-      {/* Reels Showcase Grid */}
+      {/* Reels Showcase Carousel */}
       {db.reels.length === 0 ? (
         <div className="glass-panel p-12 rounded-3xl text-center space-y-3">
           <Film className="w-12 h-12 text-gray-500 mx-auto stroke-1" />
@@ -35,12 +36,12 @@ export const ReelsView: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <HorizontalCarousel itemGap="gap-6">
           {db.reels.map((reel) => (
             <div
               key={reel.id}
               onClick={() => setActiveReel(reel)}
-              className="group relative rounded-2xl overflow-hidden aspect-[9/16] bg-black border border-white/10 glass-card-hover cursor-pointer flex flex-col justify-between shadow-2xl"
+              className="w-[230px] sm:w-[280px] shrink-0 snap-center group relative rounded-2xl overflow-hidden aspect-[9/16] bg-black border border-white/10 glass-card-hover cursor-pointer flex flex-col justify-between shadow-2xl"
             >
               <img
                 src={reel.thumbnail || "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop"}
@@ -78,7 +79,7 @@ export const ReelsView: React.FC = () => {
               </div>
             </div>
           ))}
-        </div>
+        </HorizontalCarousel>
       )}
 
       {/* Reel Modal Player */}

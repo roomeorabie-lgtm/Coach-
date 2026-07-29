@@ -5,6 +5,7 @@ import { BeforeAfterCard } from '../components/BeforeAfterCard';
 import { VideoPlayerModal } from '../components/VideoPlayerModal';
 import { AnnouncementBanner } from '../components/AnnouncementBanner';
 import { MovieVideoPlayer } from '../components/MovieVideoPlayer';
+import { HorizontalCarousel } from '../components/HorizontalCarousel';
 import { WorkoutVideo, MuscleGroup } from '../types';
 import { 
   Dumbbell, 
@@ -505,11 +506,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, scrollTo }) => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {db.transformations.slice(0, 2).map((tf) => (
-            <BeforeAfterCard key={tf.id} transformation={tf} />
+        <HorizontalCarousel itemGap="gap-6">
+          {db.transformations.map((tf) => (
+            <div key={tf.id} className="w-[88vw] sm:w-[480px] shrink-0 snap-center">
+              <BeforeAfterCard transformation={tf} />
+            </div>
           ))}
-        </div>
+        </HorizontalCarousel>
       </section>
 
       {/* Public Reels Section Preview */}
@@ -531,12 +534,12 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, scrollTo }) => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {db.reels.slice(0, 3).map((reel) => (
+        <HorizontalCarousel itemGap="gap-5">
+          {db.reels.map((reel) => (
             <div 
               key={reel.id}
               onClick={() => onNavigate('reels')}
-              className="group relative rounded-2xl overflow-hidden aspect-[9/16] bg-black border border-white/10 glass-card-hover cursor-pointer"
+              className="w-[220px] sm:w-[260px] shrink-0 snap-center group relative rounded-2xl overflow-hidden aspect-[9/16] bg-black border border-white/10 glass-card-hover cursor-pointer"
             >
               <img 
                 src={reel.thumbnail || "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop"} 
@@ -561,7 +564,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, scrollTo }) => {
               </div>
             </div>
           ))}
-        </div>
+        </HorizontalCarousel>
       </section>
 
       {/* Contact Section */}
