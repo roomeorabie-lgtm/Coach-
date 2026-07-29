@@ -1,5 +1,22 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+
+const parseVideoUrl = (url: string) => {
+  if (!url) return { type: 'unknown' as const, embedUrl: '', platformName: 'Direct' };
+  const trimmed = url.trim();
+  const ytMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  if (ytMatch && ytMatch[1]) {
+    return { type: 'youtube' as const, embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&rel=0`, platformName: 'YouTube' };
+  }
+  const driveMatch = trimmed.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch && driveMatch[1]) {
+    return { type: 'drive' as const, embedUrl: `https://drive.google.com/file/d/${driveMatch[1]}/preview`, platformName: 'Google Drive' };
+  }
+  if (trimmed.includes('vimeo.com')) {
+    return { type: 'vimeo' as const, embedUrl: trimmed, platformName: 'Vimeo' };
+  }
+  return { type: 'direct' as const, embedUrl: trimmed, platformName: 'Direct MP4/Video' };
+};
 import { 
   User, 
   WorkoutVideo, 
@@ -984,6 +1001,78 @@ export const AdminDashboardView: React.FC = () => {
                   />
                   <p className="text-[11px] text-gray-400">
                     {t('photoUrlPreviewHint')}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* COACH BODA - Specialist Header Section Image */}
+            <div className="p-4 bg-black/40 border border-emerald-500/30 rounded-2xl space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase text-emerald-400">
+                  {isRtl ? 'صورة قسم الهيدر (COACH BODA - Master Bodybuilding Specialist)' : 'COACH BODA - Specialist Section Banner Image'}
+                </label>
+                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  {isRtl ? 'صورة رئيسية' : 'Main Section Image'}
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                <div className="w-32 h-20 rounded-xl overflow-hidden border border-emerald-500/40 bg-black shrink-0 shadow-lg relative">
+                  <img 
+                    src={coachForm.heroImage || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop"} 
+                    alt="Hero Banner Preview" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop';
+                    }}
+                  />
+                </div>
+                <div className="flex-1 space-y-1.5 w-full">
+                  <input
+                    type="url"
+                    value={coachForm.heroImage || ''}
+                    onChange={(e) => setCoachForm({ ...coachForm, heroImage: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                  <p className="text-[11px] text-gray-400">
+                    {isRtl ? 'الصورة التي تظهر في الواجهة بقسم الكابتن بودا الماستر بدلاً من النص' : 'Image displayed in place of text in the COACH BODA Specialist section'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Captain Boda Biography Section Image */}
+            <div className="p-4 bg-black/40 border border-emerald-500/30 rounded-2xl space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase text-emerald-400">
+                  {isRtl ? 'صورة قسم سيرة الكابتن بودا (Captain Boda Biography Image)' : 'Captain Boda Biography Section Image'}
+                </label>
+                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  {isRtl ? 'صورة السيرة الذاتية' : 'Biography Image'}
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                <div className="w-32 h-20 rounded-xl overflow-hidden border border-emerald-500/40 bg-black shrink-0 shadow-lg relative">
+                  <img 
+                    src={coachForm.biographyImage || "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=800&auto=format&fit=crop"} 
+                    alt="Biography Image Preview" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=800&auto=format&fit=crop';
+                    }}
+                  />
+                </div>
+                <div className="flex-1 space-y-1.5 w-full">
+                  <input
+                    type="url"
+                    value={coachForm.biographyImage || ''}
+                    onChange={(e) => setCoachForm({ ...coachForm, biographyImage: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                  <p className="text-[11px] text-gray-400">
+                    {isRtl ? 'الصورة التي تظهر في قسم السيرة الذاتية للكابتن بودا بدلاً من النص' : 'Image displayed in place of text in the Captain Boda Biography section'}
                   </p>
                 </div>
               </div>

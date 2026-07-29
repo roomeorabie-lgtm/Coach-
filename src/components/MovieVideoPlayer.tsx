@@ -18,6 +18,8 @@ export const MovieVideoPlayer: React.FC<{ title?: string }> = ({
         playPromise.catch((err) => {
           console.log("Autoplay audio policy handled:", err);
           if (videoRef.current) {
+            videoRef.current.muted = true;
+            setIsMuted(true);
             videoRef.current.play().catch(() => {});
           }
         });

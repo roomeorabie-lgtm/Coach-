@@ -1,0 +1,114 @@
+{
+  "entities": {
+    "coachProfile": {
+      "name": "coachProfile",
+      "description": "Coach profile details, photos, biography and custom settings",
+      "fields": {
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "photo": { "type": "string" },
+        "biography": { "type": "string" },
+        "heroImage": { "type": "string" },
+        "biographyImage": { "type": "string" },
+        "experienceYears": { "type": "number" },
+        "clientsTransformed": { "type": "number" },
+        "certifications": { "type": "array", "items": { "type": "string" } },
+        "whatsappNumber": { "type": "string" },
+        "instagramUrl": { "type": "string" },
+        "facebookUrl": { "type": "string" },
+        "tiktokUrl": { "type": "string" },
+        "youtubeUrl": { "type": "string" },
+        "telegramUrl": { "type": "string" },
+        "xTwitterUrl": { "type": "string" }
+      }
+    },
+    "users": {
+      "name": "users",
+      "description": "Registered users and admin account",
+      "fields": {
+        "id": { "type": "string" },
+        "membershipId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "phone": { "type": "string" },
+        "profilePhoto": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "subscriptionStart": { "type": "string" },
+        "subscriptionEnd": { "type": "string" },
+        "subscriptionDaysTotal": { "type": "number" }
+      }
+    },
+    "videos": {
+      "name": "videos",
+      "description": "Workout video library items",
+      "fields": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "muscleGroup": { "type": "string" },
+        "difficulty": { "type": "string" },
+        "equipment": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "category": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "views": { "type": "number" }
+      }
+    },
+    "transformations": {
+      "name": "transformations",
+      "description": "Before and after client transformations",
+      "fields": {
+        "id": { "type": "string" },
+        "clientName": { "type": "string" },
+        "beforeImage": { "type": "string" },
+        "afterImage": { "type": "string" },
+        "description": { "type": "string" },
+        "duration": { "type": "string" },
+        "weightChange": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "reels": {
+      "name": "reels",
+      "description": "Short fitness reels and video shorts",
+      "fields": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "likesCount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "announcements": {
+      "name": "announcements",
+      "description": "Platform announcement banners",
+      "fields": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "isImportant": { "type": "boolean" }
+      }
+    },
+    "pricingPlans": {
+      "name": "pricingPlans",
+      "description": "Subscription pricing plans",
+      "fields": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "string" },
+        "durationLabel": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "isPopular": { "type": "boolean" },
+        "buttonText": { "type": "string" }
+      }
+    }
+  }
+}

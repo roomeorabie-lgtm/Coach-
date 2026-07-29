@@ -27,7 +27,8 @@ export type MuscleGroup =
   | 'Triceps' 
   | 'Legs' 
   | 'Abs & Core' 
-  | 'Full Body';
+  | 'Full Body'
+  | 'Cardio & HIIT';
 
 export type VideoDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Elite';
 
@@ -97,6 +98,8 @@ export interface CoachProfile {
   title: string;
   photo: string;
   biography: string;
+  heroImage?: string;
+  biographyImage?: string;
   experienceYears: number;
   clientsTransformed: number;
   certifications: string[];

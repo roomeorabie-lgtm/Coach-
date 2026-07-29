@@ -57,9 +57,20 @@ export const CoachProfileView: React.FC = () => {
               </p>
             </div>
 
-            <p className="text-sm md:text-base text-gray-300 leading-relaxed">
-              {profile.biography}
-            </p>
+            {/* Captain Boda Biography Image */}
+            <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/30 shadow-xl bg-black group my-2">
+              <img 
+                src={profile.biographyImage || "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=800&auto=format&fit=crop"} 
+                alt="Captain Boda Biography" 
+                className="w-full h-auto max-h-[300px] object-cover rounded-xl group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3 p-3 bg-black/85 backdrop-blur-md rounded-xl border border-white/10">
+                <p className="text-xs text-gray-200 font-medium leading-relaxed">
+                  {profile.biography}
+                </p>
+              </div>
+            </div>
 
             {/* Statistics Row */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 bg-black/50 border border-white/10 rounded-2xl">

@@ -4,6 +4,7 @@ import { MemberCard } from '../components/MemberCard';
 import { BeforeAfterCard } from '../components/BeforeAfterCard';
 import { VideoPlayerModal } from '../components/VideoPlayerModal';
 import { AnnouncementBanner } from '../components/AnnouncementBanner';
+import { MovieVideoPlayer } from '../components/MovieVideoPlayer';
 import { WorkoutVideo, MuscleGroup } from '../types';
 import { 
   Dumbbell, 
@@ -55,6 +56,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, scrollTo }) => {
     'Shoulders': isRtl ? 'الكتف' : 'Shoulders',
     'Legs': isRtl ? 'الأرجل' : 'Legs',
     'Abs & Core': isRtl ? 'البطن والكوَر' : 'Abs & Core',
+    'Full Body': isRtl ? 'الجسم بالكامل' : 'Full Body',
     'Cardio & HIIT': isRtl ? 'كارديو وفتنس' : 'Cardio & HIIT',
   };
 
@@ -96,13 +98,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, scrollTo }) => {
               {t('heroTag')}
             </div>
 
-            <h1 className="font-heading font-black text-4xl sm:text-6xl xl:text-7xl text-white uppercase tracking-tight leading-[1.05]">
-              {t('heroTitle')}
-            </h1>
-
-            <p className="text-base sm:text-lg text-gray-300 leading-relaxed max-w-2xl">
-              {t('heroSubtitle')}
-            </p>
+            {/* Hero Teaser Video replacing static image card */}
+            <div className="w-full">
+              <MovieVideoPlayer title="COACH BODA – Master Bodybuilding & Hypertrophy Fitness Specialist" />
+            </div>
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap items-center gap-4 pt-2">
@@ -224,12 +223,24 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, scrollTo }) => {
               <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">
                 {t('aboutMentorTag')}
               </span>
-              <h2 className="font-heading font-black text-3xl md:text-4xl text-white uppercase">
-                {t('aboutMentorTitle')}
-              </h2>
-              <p className="text-sm md:text-base text-gray-300 leading-relaxed">
-                {profile.biography}
-              </p>
+              
+              {/* Captain Boda Biography Image replacing text */}
+              <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/30 shadow-xl bg-black my-2 group">
+                <img 
+                  src={profile.biographyImage || "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=800&auto=format&fit=crop"} 
+                  alt="Captain Boda Biography" 
+                  className="w-full h-auto max-h-[280px] sm:max-h-[340px] object-cover rounded-xl group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3 p-3 bg-black/85 backdrop-blur-md rounded-xl border border-white/10">
+                  <span className="text-[10px] font-extrabold uppercase text-emerald-400 tracking-wider block mb-1">
+                    {t('aboutMentorTitle')}
+                  </span>
+                  <p className="text-xs text-gray-200 font-medium line-clamp-2">
+                    {profile.biography}
+                  </p>
+                </div>
+              </div>
 
               {/* Certifications List */}
               <div className="pt-2">

@@ -1,5 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
+  collection, 
+  doc, 
+  onSnapshot, 
+  setDoc, 
+  deleteDoc 
+} from 'firebase/firestore';
+import { db as firestoreDb } from '../lib/firebase';
+import { 
   DatabaseState, 
   User, 
   WorkoutVideo, 
@@ -14,7 +22,6 @@ import {
 import { initialData } from '../data/initialData';
 import { Language, translations } from '../utils/translations';
 
-const STORAGE_KEY = 'COACH_BODA_DATA_V2';
 const AUTH_KEY = 'COACH_BODA_AUTH_USER_V2';
 const LANG_KEY = 'COACH_BODA_LANG';
 
@@ -25,36 +32,36 @@ interface AppContextType {
   setLanguage: (lang: Language) => void;
   t: (key: keyof typeof translations['en']) => string;
   login: (phoneOrAccount: string, password: string) => { success: boolean; message: string };
-  register: (data: { name: string; phone: string; password: string }) => { success: boolean; message: string };
+  register: (data: { name: string; phone: string; password: string }) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
-  approveUser: (userId: string) => void;
-  rejectUser: (userId: string) => void;
-  deleteUser: (userId: string) => void;
-  assignSubscription: (userId: string, type: SubscriptionType, customDays?: number) => void;
-  renewSubscription: (userId: string, daysToAdd: number) => void;
-  addVideo: (video: Omit<WorkoutVideo, 'id' | 'createdAt'>) => void;
-  editVideo: (id: string, video: Partial<WorkoutVideo>) => void;
-  deleteVideo: (id: string) => void;
-  addTransformation: (tf: Omit<Transformation, 'id' | 'createdAt'>) => void;
-  editTransformation: (id: string, tf: Partial<Transformation>) => void;
-  deleteTransformation: (id: string) => void;
-  addReel: (reel: Omit<Reel, 'id' | 'createdAt'>) => void;
-  deleteReel: (id: string) => void;
-  addAnnouncement: (announcement: Omit<Announcement, 'id' | 'createdAt'>) => void;
-  deleteAnnouncement: (id: string) => void;
-  updateCoachProfile: (profile: Partial<CoachProfile>) => void;
-  addCertification: (cert: string) => void;
-  editCertification: (index: number, cert: string) => void;
-  deleteCertification: (index: number) => void;
-  addCustomSocialLink: (link: { platform: string; url: string }) => void;
-  deleteCustomSocialLink: (id: string) => void;
-  addPricingPlan: (plan: Omit<PricingPlan, 'id'>) => void;
-  editPricingPlan: (id: string, plan: Partial<PricingPlan>) => void;
-  deletePricingPlan: (id: string) => void;
-  updateUserProfile: (userId: string, data: { name?: string; password?: string; profilePhoto?: string; phone?: string }) => { success: boolean; message: string };
+  approveUser: (userId: string) => Promise<void>;
+  rejectUser: (userId: string) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
+  assignSubscription: (userId: string, type: SubscriptionType, customDays?: number) => Promise<void>;
+  renewSubscription: (userId: string, daysToAdd: number) => Promise<void>;
+  addVideo: (video: Omit<WorkoutVideo, 'id' | 'createdAt'>) => Promise<void>;
+  editVideo: (id: string, video: Partial<WorkoutVideo>) => Promise<void>;
+  deleteVideo: (id: string) => Promise<void>;
+  addTransformation: (tf: Omit<Transformation, 'id' | 'createdAt'>) => Promise<void>;
+  editTransformation: (id: string, tf: Partial<Transformation>) => Promise<void>;
+  deleteTransformation: (id: string) => Promise<void>;
+  addReel: (reel: Omit<Reel, 'id' | 'createdAt'>) => Promise<void>;
+  deleteReel: (id: string) => Promise<void>;
+  addAnnouncement: (announcement: Omit<Announcement, 'id' | 'createdAt'>) => Promise<void>;
+  deleteAnnouncement: (id: string) => Promise<void>;
+  updateCoachProfile: (profile: Partial<CoachProfile>) => Promise<void>;
+  addCertification: (cert: string) => Promise<void>;
+  editCertification: (index: number, cert: string) => Promise<void>;
+  deleteCertification: (index: number) => Promise<void>;
+  addCustomSocialLink: (link: { platform: string; url: string }) => Promise<void>;
+  deleteCustomSocialLink: (id: string) => Promise<void>;
+  addPricingPlan: (plan: Omit<PricingPlan, 'id'>) => Promise<void>;
+  editPricingPlan: (id: string, plan: Partial<PricingPlan>) => Promise<void>;
+  deletePricingPlan: (id: string) => Promise<void>;
+  updateUserProfile: (userId: string, data: { name?: string; password?: string; profilePhoto?: string; phone?: string }) => Promise<{ success: boolean; message: string }>;
   exportBackup: () => void;
-  importBackup: (jsonContent: string) => { success: boolean; message: string };
-  resetData: () => void;
+  importBackup: (jsonContent: string) => Promise<{ success: boolean; message: string }>;
+  resetData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -67,7 +74,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       console.error(e);
     }
-    return 'ar'; // Default to Arabic as preferred for Coach Boda platform
+    return 'ar';
   });
 
   const setLanguage = (lang: Language) => {
@@ -89,26 +96,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return langDict[key] || translations.en[key] || key;
   };
 
-  const [db, setDb] = useState<DatabaseState>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          coachProfile: parsed.coachProfile || initialData.coachProfile,
-          users: Array.isArray(parsed.users) ? parsed.users : initialData.users,
-          videos: Array.isArray(parsed.videos) ? parsed.videos : initialData.videos,
-          transformations: Array.isArray(parsed.transformations) ? parsed.transformations : initialData.transformations,
-          reels: Array.isArray(parsed.reels) ? parsed.reels : initialData.reels,
-          announcements: Array.isArray(parsed.announcements) ? parsed.announcements : initialData.announcements,
-          pricingPlans: Array.isArray(parsed.pricingPlans) && parsed.pricingPlans.length > 0 ? parsed.pricingPlans : initialData.pricingPlans,
-        };
-      }
-    } catch (e) {
-      console.error('Failed to load storage, using initialData', e);
-    }
-    return initialData;
-  });
+  const [db, setDb] = useState<DatabaseState>(initialData);
 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
@@ -122,16 +110,86 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return null;
   });
 
-  // Save database whenever it changes
+  // REAL-TIME FIRESTORE LISTENERS
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-    } catch (e) {
-      console.error('Failed to save database state to localStorage', e);
-    }
-  }, [db]);
+    // 1. Coach Profile Listener
+    const unsubCoach = onSnapshot(doc(firestoreDb, 'settings', 'coachProfile'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as CoachProfile;
+        setDb(prev => ({ ...prev, coachProfile: data }));
+      } else {
+        // Seed initial coach profile if document doesn't exist yet
+        setDoc(doc(firestoreDb, 'settings', 'coachProfile'), initialData.coachProfile).catch(console.error);
+      }
+    }, (err) => console.error("Firestore coachProfile error:", err));
 
-  // Keep currentUser state in sync with updated DB user state
+    // 2. Users Listener
+    const unsubUsers = onSnapshot(collection(firestoreDb, 'users'), (snapshot) => {
+      if (!snapshot.empty) {
+        const usersList = snapshot.docs.map(doc => doc.data() as User);
+        setDb(prev => ({ ...prev, users: usersList }));
+      } else {
+        // Seed initial users if collection is empty
+        initialData.users.forEach(u => {
+          setDoc(doc(firestoreDb, 'users', u.id), u).catch(console.error);
+        });
+      }
+    }, (err) => console.error("Firestore users error:", err));
+
+    // 3. Videos Listener
+    const unsubVideos = onSnapshot(collection(firestoreDb, 'videos'), (snapshot) => {
+      const videosList = snapshot.docs.map(doc => doc.data() as WorkoutVideo);
+      setDb(prev => ({ ...prev, videos: videosList }));
+    }, (err) => console.error("Firestore videos error:", err));
+
+    // 4. Transformations Listener
+    const unsubTfs = onSnapshot(collection(firestoreDb, 'transformations'), (snapshot) => {
+      const tfsList = snapshot.docs.map(doc => doc.data() as Transformation);
+      setDb(prev => ({ ...prev, transformations: tfsList }));
+    }, (err) => console.error("Firestore transformations error:", err));
+
+    // 5. Reels Listener
+    const unsubReels = onSnapshot(collection(firestoreDb, 'reels'), (snapshot) => {
+      const reelsList = snapshot.docs.map(doc => doc.data() as Reel);
+      setDb(prev => ({ ...prev, reels: reelsList }));
+    }, (err) => console.error("Firestore reels error:", err));
+
+    // 6. Announcements Listener
+    const unsubAnn = onSnapshot(collection(firestoreDb, 'announcements'), (snapshot) => {
+      if (!snapshot.empty) {
+        const annList = snapshot.docs.map(doc => doc.data() as Announcement);
+        setDb(prev => ({ ...prev, announcements: annList }));
+      } else {
+        initialData.announcements.forEach(a => {
+          setDoc(doc(firestoreDb, 'announcements', a.id), a).catch(console.error);
+        });
+      }
+    }, (err) => console.error("Firestore announcements error:", err));
+
+    // 7. Pricing Plans Listener
+    const unsubPlans = onSnapshot(collection(firestoreDb, 'pricingPlans'), (snapshot) => {
+      if (!snapshot.empty) {
+        const plansList = snapshot.docs.map(doc => doc.data() as PricingPlan);
+        setDb(prev => ({ ...prev, pricingPlans: plansList }));
+      } else {
+        initialData.pricingPlans.forEach(p => {
+          setDoc(doc(firestoreDb, 'pricingPlans', p.id), p).catch(console.error);
+        });
+      }
+    }, (err) => console.error("Firestore pricingPlans error:", err));
+
+    return () => {
+      unsubCoach();
+      unsubUsers();
+      unsubVideos();
+      unsubTfs();
+      unsubReels();
+      unsubAnn();
+      unsubPlans();
+    };
+  }, []);
+
+  // Sync logged in currentUser state when user record updates in Firestore
   useEffect(() => {
     if (currentUser) {
       const updatedUser = db.users.find(u => u.id === currentUser.id);
@@ -145,12 +203,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Clean phone helper
   const cleanPhone = (str: string) => str.replace(/[^0-9]/g, '');
 
-  // Login handler using Phone or Admin Account Identifier
+  // Login handler
   const login = (phoneOrAccount: string, password: string) => {
     const rawInput = phoneOrAccount.trim();
     const cleanedInputDigits = cleanPhone(rawInput);
 
-    // Find user by phone, username, email, or membershipId
     const foundUser = db.users.find(u => {
       const uPhoneClean = u.phone ? cleanPhone(u.phone) : '';
       if (cleanedInputDigits && uPhoneClean && (uPhoneClean === cleanedInputDigits || uPhoneClean.endsWith(cleanedInputDigits) || cleanedInputDigits.endsWith(uPhoneClean))) {
@@ -179,7 +236,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (foundUser.status === 'pending') {
       return { 
         success: false, 
-        message: t('lockReasonPending') 
+        message: language === 'ar' ? 'حسابك قيد المراجعة والموافقة من قبل الكابتن بودا.' : 'Your account is pending review and approval by Coach Boda.'
       };
     }
 
@@ -190,7 +247,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    // Success
     setCurrentUser(foundUser);
     localStorage.setItem(AUTH_KEY, JSON.stringify(foundUser));
     return { 
@@ -199,8 +255,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
-  // Simplified Register Handler (Name, Phone, Password)
-  const register = (data: { name: string; phone: string; password: string }) => {
+  // Register Handler
+  const register = async (data: { name: string; phone: string; password: string }) => {
     const phoneClean = cleanPhone(data.phone);
     if (!phoneClean || phoneClean.length < 6) {
       return { 
@@ -209,7 +265,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    // Check duplicate phone
     const phoneExists = db.users.some(u => u.phone && cleanPhone(u.phone) === phoneClean);
     if (phoneExists) {
       return { 
@@ -231,19 +286,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       username: generatedUsername,
       password: data.password,
       role: 'member',
-      status: 'pending', // Pending Admin approval
+      status: 'pending',
       createdAt: new Date().toISOString()
     };
 
-    setDb(prev => ({
-      ...prev,
-      users: [newUser, ...prev.users]
-    }));
-
-    return { 
-      success: true, 
-      message: language === 'ar' ? 'تم إرسال طلب التسجيل بنجاح! حسابك بانتظار موافقة الكابتن بودا.' : 'Registration submitted successfully! Your account is now pending approval by Coach Boda.' 
-    };
+    try {
+      await setDoc(doc(firestoreDb, 'users', newUser.id), newUser);
+      return { 
+        success: true, 
+        message: language === 'ar' ? 'تم إرسال طلب التسجيل بنجاح! حسابك بانتظار موافقة الكابتن بودا.' : 'Registration submitted successfully! Your account is now pending approval by Coach Boda.' 
+      };
+    } catch (e: any) {
+      console.error('Registration error:', e);
+      return { success: false, message: e.message };
+    }
   };
 
   const logout = () => {
@@ -252,44 +308,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Admin User Approvals
-  const approveUser = (userId: string) => {
+  const approveUser = async (userId: string) => {
+    const user = db.users.find(u => u.id === userId);
+    if (!user) return;
+
     const now = new Date();
-    // Default 30 days subscription upon initial approval if none set
     const defaultEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    setDb(prev => ({
-      ...prev,
-      users: prev.users.map(u => {
-        if (u.id === userId) {
-          return {
-            ...u,
-            status: 'approved',
-            subscriptionStart: u.subscriptionStart || now.toISOString(),
-            subscriptionEnd: u.subscriptionEnd || defaultEnd.toISOString(),
-            subscriptionDaysTotal: u.subscriptionDaysTotal || 30
-          };
-        }
-        return u;
-      })
-    }));
+    const updated: User = {
+      ...user,
+      status: 'approved',
+      subscriptionStart: user.subscriptionStart || now.toISOString(),
+      subscriptionEnd: user.subscriptionEnd || defaultEnd.toISOString(),
+      subscriptionDaysTotal: user.subscriptionDaysTotal || 30
+    };
+
+    await setDoc(doc(firestoreDb, 'users', userId), updated, { merge: true });
   };
 
-  const rejectUser = (userId: string) => {
-    setDb(prev => ({
-      ...prev,
-      users: prev.users.map(u => u.id === userId ? { ...u, status: 'rejected' } : u)
-    }));
+  const rejectUser = async (userId: string) => {
+    const user = db.users.find(u => u.id === userId);
+    if (!user) return;
+    await setDoc(doc(firestoreDb, 'users', userId), { ...user, status: 'rejected' }, { merge: true });
   };
 
-  const deleteUser = (userId: string) => {
-    setDb(prev => ({
-      ...prev,
-      users: prev.users.filter(u => u.id !== userId)
-    }));
+  const deleteUser = async (userId: string) => {
+    await deleteDoc(doc(firestoreDb, 'users', userId));
   };
 
   // Subscriptions
-  const assignSubscription = (userId: string, type: SubscriptionType, customDays?: number) => {
+  const assignSubscription = async (userId: string, type: SubscriptionType, customDays?: number) => {
+    const user = db.users.find(u => u.id === userId);
+    if (!user) return;
+
     let days = 30;
     if (type === '1_month') days = 30;
     else if (type === '3_months') days = 90;
@@ -300,236 +351,186 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const start = new Date();
     const end = new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
 
-    setDb(prev => ({
-      ...prev,
-      users: prev.users.map(u => {
-        if (u.id === userId) {
-          return {
-            ...u,
-            subscriptionStart: start.toISOString(),
-            subscriptionEnd: end.toISOString(),
-            subscriptionDaysTotal: days,
-            status: 'approved'
-          };
-        }
-        return u;
-      })
-    }));
+    const updated: User = {
+      ...user,
+      subscriptionStart: start.toISOString(),
+      subscriptionEnd: end.toISOString(),
+      subscriptionDaysTotal: days,
+      status: 'approved'
+    };
+
+    await setDoc(doc(firestoreDb, 'users', userId), updated, { merge: true });
   };
 
-  const renewSubscription = (userId: string, daysToAdd: number) => {
+  const renewSubscription = async (userId: string, daysToAdd: number) => {
     if (daysToAdd <= 0) return;
+    const user = db.users.find(u => u.id === userId);
+    if (!user) return;
 
-    setDb(prev => ({
-      ...prev,
-      users: prev.users.map(u => {
-        if (u.id === userId) {
-          const currentEnd = u.subscriptionEnd ? new Date(u.subscriptionEnd) : new Date();
-          const baseDate = currentEnd.getTime() > Date.now() ? currentEnd : new Date();
-          const newEnd = new Date(baseDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+    const currentEnd = user.subscriptionEnd ? new Date(user.subscriptionEnd) : new Date();
+    const baseDate = currentEnd.getTime() > Date.now() ? currentEnd : new Date();
+    const newEnd = new Date(baseDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
 
-          return {
-            ...u,
-            subscriptionStart: u.subscriptionStart || new Date().toISOString(),
-            subscriptionEnd: newEnd.toISOString(),
-            subscriptionDaysTotal: (u.subscriptionDaysTotal || 0) + daysToAdd,
-            status: 'approved'
-          };
-        }
-        return u;
-      })
-    }));
+    const updated: User = {
+      ...user,
+      subscriptionStart: user.subscriptionStart || new Date().toISOString(),
+      subscriptionEnd: newEnd.toISOString(),
+      subscriptionDaysTotal: (user.subscriptionDaysTotal || 0) + daysToAdd,
+      status: 'approved'
+    };
+
+    await setDoc(doc(firestoreDb, 'users', userId), updated, { merge: true });
   };
 
   // Workout Videos
-  const addVideo = (video: Omit<WorkoutVideo, 'id' | 'createdAt'>) => {
+  const addVideo = async (video: Omit<WorkoutVideo, 'id' | 'createdAt'>) => {
     const newVid: WorkoutVideo = {
       ...video,
       id: `vid-${Date.now()}`,
       createdAt: new Date().toISOString(),
       views: 0
     };
-    setDb(prev => ({ ...prev, videos: [newVid, ...prev.videos] }));
+    await setDoc(doc(firestoreDb, 'videos', newVid.id), newVid);
   };
 
-  const editVideo = (id: string, videoData: Partial<WorkoutVideo>) => {
-    setDb(prev => ({
-      ...prev,
-      videos: prev.videos.map(v => v.id === id ? { ...v, ...videoData } : v)
-    }));
+  const editVideo = async (id: string, videoData: Partial<WorkoutVideo>) => {
+    await setDoc(doc(firestoreDb, 'videos', id), videoData, { merge: true });
   };
 
-  const deleteVideo = (id: string) => {
-    setDb(prev => ({ ...prev, videos: prev.videos.filter(v => v.id !== id) }));
+  const deleteVideo = async (id: string) => {
+    await deleteDoc(doc(firestoreDb, 'videos', id));
   };
 
   // Transformations
-  const addTransformation = (tf: Omit<Transformation, 'id' | 'createdAt'>) => {
+  const addTransformation = async (tf: Omit<Transformation, 'id' | 'createdAt'>) => {
     const newTf: Transformation = {
       ...tf,
       id: `tf-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
-    setDb(prev => ({ ...prev, transformations: [newTf, ...prev.transformations] }));
+    await setDoc(doc(firestoreDb, 'transformations', newTf.id), newTf);
   };
 
-  const editTransformation = (id: string, tfData: Partial<Transformation>) => {
-    setDb(prev => ({
-      ...prev,
-      transformations: prev.transformations.map(t => t.id === id ? { ...t, ...tfData } : t)
-    }));
+  const editTransformation = async (id: string, tfData: Partial<Transformation>) => {
+    await setDoc(doc(firestoreDb, 'transformations', id), tfData, { merge: true });
   };
 
-  const deleteTransformation = (id: string) => {
-    setDb(prev => ({ ...prev, transformations: prev.transformations.filter(t => t.id !== id) }));
+  const deleteTransformation = async (id: string) => {
+    await deleteDoc(doc(firestoreDb, 'transformations', id));
   };
 
   // Reels
-  const addReel = (reel: Omit<Reel, 'id' | 'createdAt'>) => {
+  const addReel = async (reel: Omit<Reel, 'id' | 'createdAt'>) => {
     const newReel: Reel = {
       ...reel,
       id: `reel-${Date.now()}`,
       createdAt: new Date().toISOString(),
       likesCount: Math.floor(Math.random() * 500) + 100
     };
-    setDb(prev => ({ ...prev, reels: [newReel, ...prev.reels] }));
+    await setDoc(doc(firestoreDb, 'reels', newReel.id), newReel);
   };
 
-  const deleteReel = (id: string) => {
-    setDb(prev => ({ ...prev, reels: prev.reels.filter(r => r.id !== id) }));
+  const deleteReel = async (id: string) => {
+    await deleteDoc(doc(firestoreDb, 'reels', id));
   };
 
   // Announcements
-  const addAnnouncement = (ann: Omit<Announcement, 'id' | 'createdAt'>) => {
+  const addAnnouncement = async (ann: Omit<Announcement, 'id' | 'createdAt'>) => {
     const newAnn: Announcement = {
       ...ann,
       id: `ann-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
-    setDb(prev => ({ ...prev, announcements: [newAnn, ...prev.announcements] }));
+    await setDoc(doc(firestoreDb, 'announcements', newAnn.id), newAnn);
   };
 
-  const deleteAnnouncement = (id: string) => {
-    setDb(prev => ({ ...prev, announcements: prev.announcements.filter(a => a.id !== id) }));
+  const deleteAnnouncement = async (id: string) => {
+    await deleteDoc(doc(firestoreDb, 'announcements', id));
   };
 
   // Coach Profile & Certifications
-  const updateCoachProfile = (profile: Partial<CoachProfile>) => {
-    setDb(prev => ({
-      ...prev,
-      coachProfile: { ...prev.coachProfile, ...profile }
-    }));
+  const updateCoachProfile = async (profile: Partial<CoachProfile>) => {
+    const updated = { ...db.coachProfile, ...profile };
+    await setDoc(doc(firestoreDb, 'settings', 'coachProfile'), updated, { merge: true });
   };
 
-  const addCertification = (cert: string) => {
+  const addCertification = async (cert: string) => {
     const trimmed = cert.trim();
     if (!trimmed) return;
-    setDb(prev => ({
-      ...prev,
-      coachProfile: {
-        ...prev.coachProfile,
-        certifications: [...(prev.coachProfile.certifications || []), trimmed]
-      }
-    }));
+    const updatedCerts = [...(db.coachProfile.certifications || []), trimmed];
+    await setDoc(doc(firestoreDb, 'settings', 'coachProfile'), { ...db.coachProfile, certifications: updatedCerts }, { merge: true });
   };
 
-  const editCertification = (index: number, cert: string) => {
+  const editCertification = async (index: number, cert: string) => {
     const trimmed = cert.trim();
     if (!trimmed) return;
-    setDb(prev => {
-      const updated = [...(prev.coachProfile.certifications || [])];
-      if (index >= 0 && index < updated.length) {
-        updated[index] = trimmed;
-      }
-      return {
-        ...prev,
-        coachProfile: { ...prev.coachProfile, certifications: updated }
-      };
-    });
+    const updatedCerts = [...(db.coachProfile.certifications || [])];
+    if (index >= 0 && index < updatedCerts.length) {
+      updatedCerts[index] = trimmed;
+    }
+    await setDoc(doc(firestoreDb, 'settings', 'coachProfile'), { ...db.coachProfile, certifications: updatedCerts }, { merge: true });
   };
 
-  const deleteCertification = (index: number) => {
-    setDb(prev => ({
-      ...prev,
-      coachProfile: {
-        ...prev.coachProfile,
-        certifications: (prev.coachProfile.certifications || []).filter((_, i) => i !== index)
-      }
-    }));
+  const deleteCertification = async (index: number) => {
+    const updatedCerts = (db.coachProfile.certifications || []).filter((_, i) => i !== index);
+    await setDoc(doc(firestoreDb, 'settings', 'coachProfile'), { ...db.coachProfile, certifications: updatedCerts }, { merge: true });
   };
 
-  const addCustomSocialLink = (link: { platform: string; url: string }) => {
+  const addCustomSocialLink = async (link: { platform: string; url: string }) => {
     if (!link.url.trim()) return;
     const newLink: SocialMediaLink = {
       id: `social-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
       platform: link.platform.trim() || 'Social',
       url: link.url.trim()
     };
-    setDb(prev => ({
-      ...prev,
-      coachProfile: {
-        ...prev.coachProfile,
-        customSocialLinks: [...(prev.coachProfile.customSocialLinks || []), newLink]
-      }
-    }));
+    const updatedLinks = [...(db.coachProfile.customSocialLinks || []), newLink];
+    await setDoc(doc(firestoreDb, 'settings', 'coachProfile'), { ...db.coachProfile, customSocialLinks: updatedLinks }, { merge: true });
   };
 
-  const deleteCustomSocialLink = (id: string) => {
-    setDb(prev => ({
-      ...prev,
-      coachProfile: {
-        ...prev.coachProfile,
-        customSocialLinks: (prev.coachProfile.customSocialLinks || []).filter(l => l.id !== id)
-      }
-    }));
+  const deleteCustomSocialLink = async (id: string) => {
+    const updatedLinks = (db.coachProfile.customSocialLinks || []).filter(l => l.id !== id);
+    await setDoc(doc(firestoreDb, 'settings', 'coachProfile'), { ...db.coachProfile, customSocialLinks: updatedLinks }, { merge: true });
   };
 
   // Pricing Plans
-  const addPricingPlan = (plan: Omit<PricingPlan, 'id'>) => {
+  const addPricingPlan = async (plan: Omit<PricingPlan, 'id'>) => {
     const newPlan: PricingPlan = {
       ...plan,
       id: `plan-${Date.now()}`
     };
-    setDb(prev => ({ ...prev, pricingPlans: [...(prev.pricingPlans || []), newPlan] }));
+    await setDoc(doc(firestoreDb, 'pricingPlans', newPlan.id), newPlan);
   };
 
-  const editPricingPlan = (id: string, planData: Partial<PricingPlan>) => {
-    setDb(prev => ({
-      ...prev,
-      pricingPlans: (prev.pricingPlans || []).map(p => p.id === id ? { ...p, ...planData } : p)
-    }));
+  const editPricingPlan = async (id: string, planData: Partial<PricingPlan>) => {
+    await setDoc(doc(firestoreDb, 'pricingPlans', id), planData, { merge: true });
   };
 
-  const deletePricingPlan = (id: string) => {
-    setDb(prev => ({
-      ...prev,
-      pricingPlans: (prev.pricingPlans || []).filter(p => p.id !== id)
-    }));
+  const deletePricingPlan = async (id: string) => {
+    await deleteDoc(doc(firestoreDb, 'pricingPlans', id));
   };
 
   // User Self Profile Update
-  const updateUserProfile = (userId: string, data: { name?: string; password?: string; profilePhoto?: string; phone?: string }) => {
-    let success = false;
-    let message = language === 'ar' ? 'تم تحديث الملف الشخصي بنجاح!' : 'Profile updated successfully!';
-
-    setDb(prev => ({
-      ...prev,
-      users: prev.users.map(u => {
-        if (u.id === userId) {
-          success = true;
-          return {
-            ...u,
-            ...(data.name ? { name: data.name } : {}),
-            ...(data.password ? { password: data.password } : {}),
-            ...(data.profilePhoto ? { profilePhoto: data.profilePhoto } : {}),
-            ...(data.phone ? { phone: data.phone } : {})
-          };
-        }
-        return u;
-      })
-    }));
-
-    return { success, message };
+  const updateUserProfile = async (userId: string, data: { name?: string; password?: string; profilePhoto?: string; phone?: string }) => {
+    const user = db.users.find(u => u.id === userId);
+    if (!user) {
+      return { success: false, message: 'User not found' };
+    }
+    const updatedUser: User = {
+      ...user,
+      ...(data.name ? { name: data.name } : {}),
+      ...(data.password ? { password: data.password } : {}),
+      ...(data.profilePhoto ? { profilePhoto: data.profilePhoto } : {}),
+      ...(data.phone ? { phone: data.phone } : {})
+    };
+    try {
+      await setDoc(doc(firestoreDb, 'users', userId), updatedUser, { merge: true });
+      return { 
+        success: true, 
+        message: language === 'ar' ? 'تم تحديث الملف الشخصي بنجاح!' : 'Profile updated successfully!' 
+      };
+    } catch (e: any) {
+      return { success: false, message: e.message };
+    }
   };
 
   // Backup & Restore
@@ -543,30 +544,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     downloadAnchor.remove();
   };
 
-  const importBackup = (jsonContent: string) => {
+  const importBackup = async (jsonContent: string) => {
     try {
       const parsed = JSON.parse(jsonContent);
       if (!parsed || typeof parsed !== 'object') {
         return { success: false, message: 'Invalid JSON backup format.' };
       }
 
-      setDb({
-        coachProfile: parsed.coachProfile || initialData.coachProfile,
-        users: Array.isArray(parsed.users) ? parsed.users : [],
-        videos: Array.isArray(parsed.videos) ? parsed.videos : [],
-        transformations: Array.isArray(parsed.transformations) ? parsed.transformations : [],
-        reels: Array.isArray(parsed.reels) ? parsed.reels : [],
-        announcements: Array.isArray(parsed.announcements) ? parsed.announcements : []
-      });
+      if (parsed.coachProfile) {
+        await setDoc(doc(firestoreDb, 'settings', 'coachProfile'), parsed.coachProfile);
+      }
+      if (Array.isArray(parsed.users)) {
+        for (const u of parsed.users) {
+          await setDoc(doc(firestoreDb, 'users', u.id), u);
+        }
+      }
+      if (Array.isArray(parsed.videos)) {
+        for (const v of parsed.videos) {
+          await setDoc(doc(firestoreDb, 'videos', v.id), v);
+        }
+      }
+      if (Array.isArray(parsed.transformations)) {
+        for (const tf of parsed.transformations) {
+          await setDoc(doc(firestoreDb, 'transformations', tf.id), tf);
+        }
+      }
+      if (Array.isArray(parsed.reels)) {
+        for (const r of parsed.reels) {
+          await setDoc(doc(firestoreDb, 'reels', r.id), r);
+        }
+      }
+      if (Array.isArray(parsed.announcements)) {
+        for (const a of parsed.announcements) {
+          await setDoc(doc(firestoreDb, 'announcements', a.id), a);
+        }
+      }
+      if (Array.isArray(parsed.pricingPlans)) {
+        for (const p of parsed.pricingPlans) {
+          await setDoc(doc(firestoreDb, 'pricingPlans', p.id), p);
+        }
+      }
 
-      return { success: true, message: 'Data backup successfully restored!' };
+      return { success: true, message: 'Data backup successfully restored to database!' };
     } catch (e: any) {
       return { success: false, message: `Failed to import JSON: ${e.message}` };
     }
   };
 
-  const resetData = () => {
-    setDb(initialData);
+  const resetData = async () => {
+    await setDoc(doc(firestoreDb, 'settings', 'coachProfile'), initialData.coachProfile);
   };
 
   return (
@@ -620,4 +646,3 @@ export const useApp = () => {
   }
   return context;
 };
-

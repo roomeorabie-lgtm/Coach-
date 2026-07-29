@@ -6,6 +6,8 @@ export const initialData: DatabaseState = {
     title: 'Master Bodybuilding & Hypertrophy Fitness Specialist',
     photo: 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?q=80&w=1000&auto=format&fit=crop',
     biography: 'Professional bodybuilding coach specializing in custom muscle hypertrophy programs, physique transformation, macronutrient coaching, and precise exercise execution.',
+    heroImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop',
+    biographyImage: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=800&auto=format&fit=crop',
     experienceYears: 5,
     clientsTransformed: 500,
     certifications: [
