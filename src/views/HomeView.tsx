@@ -206,68 +206,53 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, scrollTo }) => {
       {/* About Coach Boda Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="glass-panel rounded-3xl p-8 md:p-12 border border-emerald-500/20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">
+              {t('aboutMentorTag')}
+            </span>
             
-            <div className="lg:col-span-5 relative">
+            {/* Captain Boda Biography Image */}
+            <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/30 shadow-xl bg-black my-2 group">
               <img 
-                src={profile.photo || "https://images.unsplash.com/photo-1567013127542-490d757e51fc?q=80&w=600&auto=format&fit=crop"} 
-                alt="Coach Boda Biography" 
-                className="w-full h-80 md:h-96 object-cover rounded-2xl border border-white/10"
+                src={profile.biographyImage || "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=800&auto=format&fit=crop"} 
+                alt="Captain Boda Biography" 
+                className="w-full h-auto max-h-[320px] sm:max-h-[380px] object-cover rounded-xl group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute top-4 left-4 bg-emerald-500 text-black font-heading font-black text-xs uppercase px-3 py-1 rounded-md tracking-wider">
-                {t('verifiedMasterCoach')}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3 p-3.5 bg-black/85 backdrop-blur-md rounded-xl border border-white/10">
+                <span className="text-[10px] font-extrabold uppercase text-emerald-400 tracking-wider block mb-1">
+                  {t('aboutMentorTitle')}
+                </span>
+                <p className="text-xs text-gray-200 font-medium line-clamp-2">
+                  {profile.biography}
+                </p>
               </div>
             </div>
 
-            <div className="lg:col-span-7 space-y-4">
-              <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">
-                {t('aboutMentorTag')}
-              </span>
-              
-              {/* Captain Boda Biography Image replacing text */}
-              <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/30 shadow-xl bg-black my-2 group">
-                <img 
-                  src={profile.biographyImage || "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=800&auto=format&fit=crop"} 
-                  alt="Captain Boda Biography" 
-                  className="w-full h-auto max-h-[280px] sm:max-h-[340px] object-cover rounded-xl group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                <div className="absolute bottom-3 left-3 right-3 p-3 bg-black/85 backdrop-blur-md rounded-xl border border-white/10">
-                  <span className="text-[10px] font-extrabold uppercase text-emerald-400 tracking-wider block mb-1">
-                    {t('aboutMentorTitle')}
-                  </span>
-                  <p className="text-xs text-gray-200 font-medium line-clamp-2">
-                    {profile.biography}
-                  </p>
-                </div>
-              </div>
-
-              {/* Certifications List */}
-              <div className="pt-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-3">
-                  {t('certificationsQualifications')}
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {profile.certifications.map((cert, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs text-gray-200 bg-white/5 p-2.5 rounded-lg border border-white/5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>{cert}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-4">
-                <button
-                  onClick={() => onNavigate('coach')}
-                  className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors"
-                >
-                  {t('viewFullCoachProfile')}
-                  <ArrowRight className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
-                </button>
+            {/* Certifications List */}
+            <div className="pt-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-3">
+                {t('certificationsQualifications')}
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {profile.certifications.map((cert, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-xs text-gray-200 bg-white/5 p-2.5 rounded-lg border border-white/5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{cert}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
+            <div className="pt-4">
+              <button
+                onClick={() => onNavigate('coach')}
+                className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors"
+              >
+                {t('viewFullCoachProfile')}
+                <ArrowRight className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
           </div>
         </div>
       </section>

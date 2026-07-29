@@ -20,7 +20,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onNavigate }) => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
 
@@ -36,8 +36,8 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onNavigate }) => {
 
     setLoading(true);
 
-    setTimeout(() => {
-      const res = register({
+    try {
+      const res = await register({
         name: formData.name,
         phone: formData.phone,
         password: formData.password
@@ -47,9 +47,12 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onNavigate }) => {
       if (res.success) {
         setMessage({ type: 'success', text: res.message });
       } else {
-        setMessage({ type: 'error', text: res.message });
+        setMessage({ type: 'error', text: res.message || (isRtl ? 'فشل التسجيل. يرجى المحاولة مرة أخرى.' : 'Registration failed. Please try again.') });
       }
-    }, 400);
+    } catch (err: any) {
+      setLoading(false);
+      setMessage({ type: 'error', text: err?.message || (isRtl ? 'حدث خطأ غير متوقع أثناء التسجيل.' : 'An unexpected error occurred.') });
+    }
   };
 
   const isRtl = language === 'ar';
