@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { MemberCard } from '../components/MemberCard';
+import { ImageUploader } from '../components/ImageUploader';
 import { User, CheckCircle2, AlertCircle, Save, Key, Phone, Camera } from 'lucide-react';
 
 export const ProfileSettingsView: React.FC = () => {
@@ -110,15 +111,11 @@ export const ProfileSettingsView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
-              {t('profilePhotoUrl')}
-            </label>
-            <input
-              type="url"
+            <ImageUploader
+              label={t('profilePhotoUrl')}
               value={profilePhoto}
-              onChange={(e) => setProfilePhoto(e.target.value)}
+              onChange={setProfilePhoto}
               placeholder="https://..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 text-xs"
             />
           </div>
 

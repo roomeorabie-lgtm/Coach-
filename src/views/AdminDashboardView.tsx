@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { ImageUploader } from '../components/ImageUploader';
 
 const parseVideoUrl = (url: string) => {
   if (!url) return { type: 'unknown' as const, embedUrl: '', platformName: 'Direct' };
@@ -973,109 +974,34 @@ export const AdminDashboardView: React.FC = () => {
               />
             </div>
 
-            {/* Profile Photo by URL with LIVE PREVIEW */}
+            {/* Profile Photo Upload */}
             <div className="p-4 bg-black/40 border border-white/10 rounded-2xl space-y-3">
-              <label className="block text-xs font-bold uppercase text-emerald-400">{t('photoUrlLabel')}</label>
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-emerald-500/50 bg-black shrink-0 shadow-lg relative group">
-                  <img 
-                    src={coachForm.photo || "https://images.unsplash.com/photo-1567013127542-490d757e51fc?q=80&w=300&auto=format&fit=crop"} 
-                    alt="Coach Boda Preview" 
-                    className="w-full h-full object-cover object-top"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?q=80&w=300&auto=format&fit=crop';
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-white font-bold">
-                    Preview
-                  </div>
-                </div>
-                <div className="flex-1 space-y-1.5 w-full">
-                  <input
-                    type="url"
-                    required
-                    value={coachForm.photo}
-                    onChange={(e) => setCoachForm({ ...coachForm, photo: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono text-xs"
-                    placeholder="https://images.unsplash.com/..."
-                  />
-                  <p className="text-[11px] text-gray-400">
-                    {t('photoUrlPreviewHint')}
-                  </p>
-                </div>
-              </div>
+              <ImageUploader
+                label={t('photoUrlLabel')}
+                value={coachForm.photo}
+                onChange={(newUrl) => setCoachForm({ ...coachForm, photo: newUrl })}
+                aspectRatio="square"
+              />
             </div>
 
             {/* COACH BODA - Specialist Header Section Image */}
             <div className="p-4 bg-black/40 border border-emerald-500/30 rounded-2xl space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold uppercase text-emerald-400">
-                  {isRtl ? 'صورة قسم الهيدر (COACH BODA - Master Bodybuilding Specialist)' : 'COACH BODA - Specialist Section Banner Image'}
-                </label>
-                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  {isRtl ? 'صورة رئيسية' : 'Main Section Image'}
-                </span>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                <div className="w-32 h-20 rounded-xl overflow-hidden border border-emerald-500/40 bg-black shrink-0 shadow-lg relative">
-                  <img 
-                    src={coachForm.heroImage || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop"} 
-                    alt="Hero Banner Preview" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop';
-                    }}
-                  />
-                </div>
-                <div className="flex-1 space-y-1.5 w-full">
-                  <input
-                    type="url"
-                    value={coachForm.heroImage || ''}
-                    onChange={(e) => setCoachForm({ ...coachForm, heroImage: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
-                    placeholder="https://images.unsplash.com/..."
-                  />
-                  <p className="text-[11px] text-gray-400">
-                    {isRtl ? 'الصورة التي تظهر في الواجهة بقسم الكابتن بودا الماستر بدلاً من النص' : 'Image displayed in place of text in the COACH BODA Specialist section'}
-                  </p>
-                </div>
-              </div>
+              <ImageUploader
+                label={isRtl ? 'صورة قسم الهيدر (COACH BODA - Master Bodybuilding Specialist)' : 'COACH BODA - Specialist Section Banner Image'}
+                value={coachForm.heroImage || ''}
+                onChange={(newUrl) => setCoachForm({ ...coachForm, heroImage: newUrl })}
+                aspectRatio="banner"
+              />
             </div>
 
             {/* Captain Boda Biography Section Image */}
             <div className="p-4 bg-black/40 border border-emerald-500/30 rounded-2xl space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold uppercase text-emerald-400">
-                  {isRtl ? 'صورة قسم سيرة الكابتن بودا (Captain Boda Biography Image)' : 'Captain Boda Biography Section Image'}
-                </label>
-                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  {isRtl ? 'صورة السيرة الذاتية' : 'Biography Image'}
-                </span>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                <div className="w-32 h-20 rounded-xl overflow-hidden border border-emerald-500/40 bg-black shrink-0 shadow-lg relative">
-                  <img 
-                    src={coachForm.biographyImage || "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=800&auto=format&fit=crop"} 
-                    alt="Biography Image Preview" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=800&auto=format&fit=crop';
-                    }}
-                  />
-                </div>
-                <div className="flex-1 space-y-1.5 w-full">
-                  <input
-                    type="url"
-                    value={coachForm.biographyImage || ''}
-                    onChange={(e) => setCoachForm({ ...coachForm, biographyImage: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
-                    placeholder="https://images.unsplash.com/..."
-                  />
-                  <p className="text-[11px] text-gray-400">
-                    {isRtl ? 'الصورة التي تظهر في قسم السيرة الذاتية للكابتن بودا بدلاً من النص' : 'Image displayed in place of text in the Captain Boda Biography section'}
-                  </p>
-                </div>
-              </div>
+              <ImageUploader
+                label={isRtl ? 'صورة قسم سيرة الكابتن بودا (Captain Boda Biography Image)' : 'Captain Boda Biography Section Image'}
+                value={coachForm.biographyImage || ''}
+                onChange={(newUrl) => setCoachForm({ ...coachForm, biographyImage: newUrl })}
+                aspectRatio="video"
+              />
             </div>
 
             {/* Experience & Clients Transformed */}
@@ -1564,13 +1490,11 @@ export const AdminDashboardView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-gray-400 mb-1">{t('photoUrlLabel')}</label>
-                <input
-                  type="url"
-                  placeholder="https://..."
+                <ImageUploader
+                  label={t('photoUrlLabel')}
                   value={videoForm.thumbnail}
-                  onChange={(e) => setVideoForm({ ...videoForm, thumbnail: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white"
+                  onChange={(newUrl) => setVideoForm({ ...videoForm, thumbnail: newUrl })}
+                  aspectRatio="video"
                 />
               </div>
 
@@ -1624,26 +1548,22 @@ export const AdminDashboardView: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-gray-400 mb-1">{t('beforeImageLabel')}</label>
-                  <input
-                    type="url"
-                    required
+                  <ImageUploader
+                    label={t('beforeImageLabel')}
                     value={tfForm.beforeImage}
-                    onChange={(e) => setTfForm({ ...tfForm, beforeImage: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white"
+                    onChange={(newUrl) => setTfForm({ ...tfForm, beforeImage: newUrl })}
+                    aspectRatio="square"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-400 mb-1">{t('afterImageLabel')}</label>
-                  <input
-                    type="url"
-                    required
+                  <ImageUploader
+                    label={t('afterImageLabel')}
                     value={tfForm.afterImage}
-                    onChange={(e) => setTfForm({ ...tfForm, afterImage: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white"
+                    onChange={(newUrl) => setTfForm({ ...tfForm, afterImage: newUrl })}
+                    aspectRatio="square"
                   />
                 </div>
               </div>
@@ -1742,12 +1662,11 @@ export const AdminDashboardView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-gray-400 mb-1">{t('photoUrlLabel')}</label>
-                <input
-                  type="url"
+                <ImageUploader
+                  label={t('photoUrlLabel')}
                   value={reelForm.thumbnail}
-                  onChange={(e) => setReelForm({ ...reelForm, thumbnail: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white"
+                  onChange={(newUrl) => setReelForm({ ...reelForm, thumbnail: newUrl })}
+                  aspectRatio="video"
                 />
               </div>
 
